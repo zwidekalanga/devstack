@@ -4,9 +4,7 @@ Local development environment for the Capitec Fraud Engine platform.
 
 ## Overview
 
-This is a take-home assessment submission for the **Software Engineer III: Back-End** position at Capitec. The chosen project is the **Fraud Rule Engine Service**.
-
-The solution is a microservices platform for real-time transaction fraud detection. This devstack orchestrates the local infrastructure and services needed to run and evaluate the project.
+I submitted the Fraud Rule Engine Service project. I had it setup as a set of microservices a fraud detection engine, a supporting banking system API and an admin portal to wrap the lot up. This devstack repo allows easey local setup with few Make commands to get everything running locally.
 
 ### Services
 
@@ -29,57 +27,71 @@ PostgreSQL, Redis, Apache Kafka (KRaft), and RabbitMQ — all managed via Docker
 
 ## Getting Started
 
-**1. Clone this repository and configure the environment**
+### Step 1 — Clone this repo and configure the workspace
 
 ```bash
+git clone git@github.com:zwidekalanga/devstack.git
 cd devstack
 cp .env.example .env
 ```
 
-The `.env` file sets `CAPITEC_DEVSTACK_WORKSPACE`, which tells the Makefile where to find the service repos. The default value (`..`) expects this layout:
+The `.env` we set `CAPITEC_DEVSTACK_WORKSPACE`, this is what the Makefile will use to find the all other services repos. The default value (..) assumes such layout:
 
 ```
-your-workspace/
-  devstack/                 # <-- you are here
+capitec-swe-assessment/       <-- CAPITEC_DEVSTACK_WORKSPACE
+  devstack/                   <-- this repo
   core-fraud-detection/
   core-banking/
   fraud-ops-portal/
 ```
 
-If your layout differs, update `.env` with an absolute path:
+If your layout differs, set an absolute path in `.env`:
 
 ```bash
 CAPITEC_DEVSTACK_WORKSPACE=/Users/{username}/Workspace/capitec-swe-assessment
 ```
 
-**2. Clone the service repositories**
+### Step 2 — Clone the service repositories
 
 ```bash
 make dev.clone
 ```
 
-**3. Start all services**
+This clones `core-fraud-detection`, `core-banking`, and `fraud-ops-portal` into the workspace directory.
+
+### Step 3 — Start all services
 
 ```bash
 make dev.up
 ```
 
-This starts infrastructure first, waits for health checks, then brings up the banking and fraud detection services.
+This starts containers in order:
+1. **Infrastructure** — Postgres, Redis, Kafka, RabbitMQ (waits for health checks)
+2. **Core Banking** — Banking API on port 8001
+3. **Core Fraud Detection** — Fraud API, gRPC server, Kafka consumer, Celery workers
 
-**4. Run migrations and seed data**
+### Step 4 — Run migrations and seed data
 
 ```bash
 make dev.setup
 ```
 
-Once running:
+This runs database migrations and seeds initial data for both services:
+- **Core Banking** — creates the `admin_users` table and seeds three default users
+- **Core Fraud Detection** — creates fraud tables and seeds default detection rules
+
+### Step 5 — Verify
+
+Open the API docs to confirm both services are running:
 
 | Service | URL |
 | --- | --- |
-| Fraud Detection API | http://localhost:8000/docs |
 | Core Banking API | http://localhost:8001/docs |
+| Fraud Detection API | http://localhost:8000/docs |
 
-> **Default credentials:** admin / admin123
+Login with the default credentials: **admin** / **admin123**
+
+You can also run `make dev.health` to check all services at once.
 
 ## Running Tests
 
@@ -98,7 +110,7 @@ make dev.clean   # Stop and remove all volumes (full reset)
 
 ## Admin Portal (Optional)
 
-The Fraud Ops Portal is a standalone React application. With backend services running:
+The Fraud Ops Portal is a standalone React app. With the backend services running:
 
 ```bash
 cd fraud-ops-portal

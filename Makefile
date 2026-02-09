@@ -135,9 +135,13 @@ dev.seed: ## Seed default fraud rules
 	@echo "$(CYAN)Seeding fraud rules...$(RESET)"
 	$(FRAUD) exec -T fraud-inbound-http python -m scripts.seed_rules || true
 
-dev.setup: ## First-time setup: migrate + seed
+dev.setup: ## First-time setup: migrate + seed (both services)
 	@echo "$(CYAN)Running first-time setup...$(RESET)"
+	@echo "$(CYAN)Running core-banking migrations (creates tables + seeds admin users)...$(RESET)"
+	$(BANKING) exec -T banking-inbound-http alembic upgrade head
+	@echo "$(CYAN)Running fraud-detection migrations...$(RESET)"
 	$(FRAUD) exec -T fraud-inbound-http alembic upgrade head
+	@echo "$(CYAN)Seeding fraud rules...$(RESET)"
 	$(FRAUD) exec -T fraud-inbound-http python -m scripts.seed_rules || true
 	@echo "$(GREEN)Setup complete!$(RESET)"
 
@@ -210,7 +214,7 @@ dev.health: ## Check health of all services
 	@$(INFRA) exec -T postgres pg_isready -U postgres > /dev/null && echo "$(GREEN)✓ PostgreSQL$(RESET)" || echo "$(RED)✗ PostgreSQL$(RESET)"
 	@$(INFRA) exec -T redis redis-cli ping > /dev/null && echo "$(GREEN)✓ Redis$(RESET)" || echo "$(RED)✗ Redis$(RESET)"
 	@$(INFRA) exec -T rabbitmq rabbitmq-diagnostics -q ping > /dev/null 2>&1 && echo "$(GREEN)✓ RabbitMQ$(RESET)" || echo "$(RED)✗ RabbitMQ$(RESET)"
-	@$(INFRA) exec -T kafka kafka-broker-api-versions --bootstrap-server localhost:29092 > /dev/null 2>&1 && echo "$(GREEN)✓ Kafka$(RESET)" || echo "$(RED)✗ Kafka$(RESET)"
+	@$(INFRA) exec -T kafka kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1 && echo "$(GREEN)✓ Kafka$(RESET)" || echo "$(RED)✗ Kafka$(RESET)"
 
 # ==================== KAFKA ====================
 
