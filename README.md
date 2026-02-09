@@ -4,7 +4,9 @@ Local development environment for the Capitec Fraud Engine platform.
 
 ## Overview
 
-The Capitec Fraud Engine is a microservices platform for real-time transaction fraud detection. This devstack orchestrates the local infrastructure and services needed for development.
+This is a take-home assessment submission for the **Software Engineer III: Back-End** position at Capitec. The chosen project is the **Fraud Rule Engine Service**.
+
+The solution is a microservices platform for real-time transaction fraud detection. This devstack orchestrates the local infrastructure and services needed to run and evaluate the project.
 
 ### Services
 
@@ -106,12 +108,7 @@ pnpm dev
 
 Available at http://localhost:3000. See the [fraud-ops-portal README](https://github.com/zwidekalanga/fraud-ops-portal) for details.
 
-## Getting Help
+## Further Reading
 
 - Run `make help` to see all available commands
 - See [SUPPORT.md](SUPPORT.md) for port mappings, full command reference, and troubleshooting
-- Open an [issue](https://github.com/zwidekalanga/devstack/issues) for bugs or questions
-
-## License
-
-This project is proprietary and confidential.
