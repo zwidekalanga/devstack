@@ -1,126 +1,64 @@
 # Capitec Fraud Engine — Devstack
 
-Local development environment for the Capitec Fraud Engine platform.
+This is the local development environment for the Capitec Fraud Engine platform. It brings together three separate services into a single Docker Compose setup so you can run the full stack on your machine with a few Make commands.
 
-## Overview
+## How It Works
 
-I submitted the Fraud Rule Engine Service project. I had it setup as a set of microservices a fraud detection engine, a supporting banking system API and an admin portal to wrap the lot up. This devstack repo allows easey local setup with few Make commands to get everything running locally.
+The platform evaluates financial transactions for fraud in real time. When a transaction is created through the Core Banking API, two things happen: the banking service calls the Fraud Detection service over gRPC to get an immediate risk score, and it publishes the transaction to Kafka for background processing and alert creation.
 
-### Services
+The Fraud Detection service runs every enabled rule against the transaction and adds up the scores. Depending on the total, the transaction is either approved, flagged for manual review, or escalated automatically. Analysts can then manage these alerts through the Fraud Ops Portal.
 
-| Service | Repository | Description |
-| --- | --- | --- |
-| **Core Fraud Detection** | [core-fraud-detection](https://github.com/zwidekalanga/core-fraud-detection) | Rules engine, Kafka consumer, gRPC API, Celery workers |
-| **Core Banking** | [core-banking](https://github.com/zwidekalanga/core-banking) | Customer, account, and transaction management |
-| **Fraud Ops Portal** | [fraud-ops-portal](https://github.com/zwidekalanga/fraud-ops-portal) | React admin dashboard (optional, runs standalone) |
+Three services make this work:
 
-### Infrastructure
+- **[Core Banking](https://github.com/zwidekalanga/core-banking)** — Manages customers, accounts, and transactions. This is the entry point for all transaction activity. Runs on port 8001.
+- **[Core Fraud Detection](https://github.com/zwidekalanga/core-fraud-detection)** — The rules engine. Evaluates transactions, calculates risk scores, and creates alerts. Powered by [pylitmus](https://pypi.org/project/pylitmus/). Runs on port 8000.
+- **[Fraud Ops Portal](https://github.com/zwidekalanga/fraud-ops-portal)** — A React admin dashboard where analysts review alerts, manage rules, and monitor system activity. Runs on port 3000 outside of Docker.
 
-PostgreSQL, Redis, Apache Kafka (KRaft), and RabbitMQ — all managed via Docker Compose.
-
-## Prerequisites
-
-| Tool | Version | Install |
-| --- | --- | --- |
-| Docker Desktop | v4+ | [docker.com](https://www.docker.com/products/docker-desktop/) |
-| GNU Make | 3.81+ | Pre-installed on macOS/Linux |
+The infrastructure underneath — PostgreSQL, Redis, Apache Kafka, and RabbitMQ — is all managed by Docker Compose.
 
 ## Getting Started
 
-### Step 1 — Clone this repo and configure the workspace
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) v4+
+- GNU Make (pre-installed on macOS and Linux)
+- Set `CAPITEC_DEVSTACK_WORKSPACE` in `.env` to the directory containing all service repos. The default value assumes they sit under the same parent directory. If your layout differs, set it to an absolute path.
+
+### Quick Setup
 
 ```bash
 git clone git@github.com:zwidekalanga/devstack.git
 cd devstack
 cp .env.example .env
-```
-
-The `.env` we set `CAPITEC_DEVSTACK_WORKSPACE`, this is what the Makefile will use to find the all other services repos. The default value (..) assumes such layout:
-
-```
-capitec-swe-assessment/       <-- CAPITEC_DEVSTACK_WORKSPACE
-  devstack/                   <-- this repo
-  core-fraud-detection/
-  core-banking/
-  fraud-ops-portal/
-```
-
-If your layout differs, set an absolute path in `.env`:
-
-```bash
-CAPITEC_DEVSTACK_WORKSPACE=/Users/{username}/Workspace/capitec-swe-assessment
-```
-
-### Step 2 — Clone the service repositories
-
-```bash
 make dev.clone
-```
-
-This clones `core-fraud-detection`, `core-banking`, and `fraud-ops-portal` into the workspace directory.
-
-### Step 3 — Start all services
-
-```bash
 make dev.up
-```
-
-This starts containers in order:
-1. **Infrastructure** — Postgres, Redis, Kafka, RabbitMQ (waits for health checks)
-2. **Core Banking** — Banking API on port 8001
-3. **Core Fraud Detection** — Fraud API, gRPC server, Kafka consumer, Celery workers
-
-### Step 4 — Run migrations and seed data
-
-```bash
 make dev.setup
 ```
 
-This runs database migrations and seeds initial data for both services:
-- **Core Banking** — creates the `admin_users` table and seeds three default users
-- **Core Fraud Detection** — creates fraud tables and seeds default detection rules
+This clones all three service repositories, starts the infrastructure and backend services, then runs database migrations and seeds initial data including default fraud rules and test users.
 
-### Step 5 — Verify
+### Verify the Setup
 
-Open the API docs to confirm both services are running:
+Run `make dev.health` to check all services, or open the API docs directly:
 
-| Service | URL |
-| --- | --- |
-| Core Banking API | http://localhost:8001/docs |
-| Fraud Detection API | http://localhost:8000/docs |
+- Core Banking — http://localhost:8001/docs
+- Fraud Detection — http://localhost:8000/docs
 
-Login with the default credentials: **admin** / **admin123**
+Default credentials: **admin** / **admin123**
 
-You can also run `make dev.health` to check all services at once.
-
-## Running Tests
+## Common Commands
 
 ```bash
-make dev.test              # All tests with coverage
-make dev.test.unit         # Unit tests only
-make dev.test.integration  # Integration tests only
+make dev.up          # Start all services
+make dev.down        # Stop all services
+make dev.clean       # Stop and remove all volumes (full reset)
+make dev.test        # Run all tests with coverage
+make dev.health      # Health check all services
 ```
 
-## Stopping Services
-
-```bash
-make dev.down    # Stop all containers
-make dev.clean   # Stop and remove all volumes (full reset)
-```
-
-## Admin Portal (Optional)
-
-The Fraud Ops Portal is a standalone React app. With the backend services running:
-
-```bash
-cd fraud-ops-portal
-pnpm install
-pnpm dev
-```
-
-Available at http://localhost:3000. See the [fraud-ops-portal README](https://github.com/zwidekalanga/fraud-ops-portal) for details.
+Run `make help` for the full list.
 
 ## Further Reading
 
-- Run `make help` to see all available commands
-- See [SUPPORT.md](SUPPORT.md) for port mappings, full command reference, and troubleshooting
+- **[USAGE.md](USAGE.md)** — Admin portal, REST API walkthrough, Kafka transactions, and testing
+- **[RULES.md](RULES.md)** — Fraud detection rules, scoring, and decision tiers

@@ -6,7 +6,8 @@
 	dev.test dev.test.unit dev.test.integration dev.lint dev.lint.fix dev.format dev.typecheck \
 	dev.shell.api dev.shell.db dev.shell.redis dev.shell.rabbitmq \
 	dev.generate dev.proto dev.proto.lint dev.proto.breaking \
-	dev.kafka.topics dev.kafka.create-topics
+	dev.kafka.topics dev.kafka.create-topics \
+	dev.txn.kafka dev.txn.benchmark
 
 # Default target
 .DEFAULT_GOAL := help
@@ -226,6 +227,16 @@ dev.kafka.create-topics: ## Create required Kafka topics
 	$(INFRA) exec -T kafka kafka-topics --bootstrap-server localhost:29092 --create --if-not-exists --topic transactions.raw --partitions 3 --replication-factor 1
 	$(INFRA) exec -T kafka kafka-topics --bootstrap-server localhost:29092 --create --if-not-exists --topic transactions.dlq --partitions 1 --replication-factor 1
 	@echo "$(GREEN)Topics created!$(RESET)"
+
+# ==================== TRANSACTIONS ====================
+
+dev.txn.kafka: ## Publish transactions directly to Kafka (usage: make dev.txn.kafka COUNT=1000)
+	@echo "$(CYAN)Publishing $(or $(COUNT),1000) transactions to Kafka...$(RESET)"
+	$(FRAUD) exec -T fraud-inbound-http python -m scripts.generate_transactions --count $(or $(COUNT),1000) --high-risk 0.2
+
+dev.txn.benchmark: ## Benchmark: publish 1000 txns to Kafka and measure processing throughput
+	@echo "$(CYAN)Running Kafka benchmark ($(or $(COUNT),1000) transactions)...$(RESET)"
+	$(FRAUD) exec -T fraud-inbound-http python -m scripts.benchmark_kafka --count $(or $(COUNT),1000)
 
 # ==================== BUILD ====================
 
