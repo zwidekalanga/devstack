@@ -1,0 +1,13 @@
+# Environment (contains local workspace paths)
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
