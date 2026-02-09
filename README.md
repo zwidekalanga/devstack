@@ -2,6 +2,22 @@
 
 Local development environment for the Capitec Fraud Engine platform.
 
+## Overview
+
+The Capitec Fraud Engine is a microservices platform for real-time transaction fraud detection. This devstack orchestrates the local infrastructure and services needed for development.
+
+### Services
+
+| Service | Repository | Description |
+| --- | --- | --- |
+| **Core Fraud Detection** | [core-fraud-detection](https://github.com/zwidekalanga/core-fraud-detection) | Rules engine, Kafka consumer, gRPC API, Celery workers |
+| **Core Banking** | [core-banking](https://github.com/zwidekalanga/core-banking) | Customer, account, and transaction management |
+| **Fraud Ops Portal** | [fraud-ops-portal](https://github.com/zwidekalanga/fraud-ops-portal) | React admin dashboard (optional, runs standalone) |
+
+### Infrastructure
+
+PostgreSQL, Redis, Apache Kafka (KRaft), and RabbitMQ — all managed via Docker Compose.
+
 ## Prerequisites
 
 | Tool | Version | Install |
@@ -11,79 +27,76 @@ Local development environment for the Capitec Fraud Engine platform.
 
 ## Getting Started
 
+**1. Clone this repository and configure the environment**
+
 ```bash
-# 1. Navigate to devstack
 cd devstack
-
-# 2. Configure environment
 cp .env.example .env
-# Edit .env and set CAPITEC_DEVSTACK_WORKSPACE (see below)
+```
 
-# 3. Clone service repositories
+The `.env` file sets `CAPITEC_DEVSTACK_WORKSPACE`, which tells the Makefile where to find the service repos. The default value (`..`) expects this layout:
+
+```
+your-workspace/
+  devstack/                 # <-- you are here
+  core-fraud-detection/
+  core-banking/
+  fraud-ops-portal/
+```
+
+If your layout differs, update `.env` with an absolute path:
+
+```bash
+CAPITEC_DEVSTACK_WORKSPACE=/Users/{username}/Workspace/capitec-swe-assessment
+```
+
+**2. Clone the service repositories**
+
+```bash
 make dev.clone
+```
 
-# 4. Start all services
+**3. Start all services**
+
+```bash
 make dev.up
+```
 
-# 5. Run migrations and seed data
+This starts infrastructure first, waits for health checks, then brings up the banking and fraud detection services.
+
+**4. Run migrations and seed data**
+
+```bash
 make dev.setup
 ```
 
-Once running, the following services are available:
+Once running:
 
 | Service | URL |
 | --- | --- |
-| Fraud Detection API (Swagger) | http://localhost:8000/docs |
-| Core Banking API (Swagger) | http://localhost:8001/docs |
+| Fraud Detection API | http://localhost:8000/docs |
+| Core Banking API | http://localhost:8001/docs |
 
 > **Default credentials:** admin / admin123
 
 ## Running Tests
 
 ```bash
-make dev.test            # All tests with coverage
-make dev.test.unit       # Unit tests only
-make dev.test.integration # Integration tests only
+make dev.test              # All tests with coverage
+make dev.test.unit         # Unit tests only
+make dev.test.integration  # Integration tests only
 ```
 
 ## Stopping Services
 
 ```bash
-make dev.down   # Stop all containers
-make dev.clean  # Stop and remove all volumes (full reset)
-```
-
-## Environment Configuration
-
-`CAPITEC_DEVSTACK_WORKSPACE` must point to the **parent directory** that contains (or will contain) all service repos. The Makefile expects this layout:
-
-```
-<CAPITEC_DEVSTACK_WORKSPACE>/
-  core-fraud-detection/
-  core-banking/
-  fraud-ops-portal/
-  devstack/              # (this repo)
-```
-
-Since `devstack/` sits inside the workspace, the default value `..` (one level up) works when your directory structure looks like:
-
-```
-capitec-swe-assessment/  <-- this is the workspace
-  devstack/
-  core-fraud-detection/
-  core-banking/
-  fraud-ops-portal/
-```
-
-If your layout differs, set an absolute path in `.env`:
-
-```bash
-CAPITEC_DEVSTACK_WORKSPACE=/Users/{username}/Workspace/capitec-swe-assessment
+make dev.down    # Stop all containers
+make dev.clean   # Stop and remove all volumes (full reset)
 ```
 
 ## Admin Portal (Optional)
 
-To run the Fraud Ops Portal UI, ensure the backend services are running, then:
+The Fraud Ops Portal is a standalone React application. With backend services running:
 
 ```bash
 cd fraud-ops-portal
@@ -91,8 +104,14 @@ pnpm install
 pnpm dev
 ```
 
-The portal will be available at http://localhost:3000. See [fraud-ops-portal/README.md](../fraud-ops-portal/README.md) for details.
+Available at http://localhost:3000. See the [fraud-ops-portal README](https://github.com/zwidekalanga/fraud-ops-portal) for details.
 
-## Further Reading
+## Getting Help
 
-- [SUPPORT.md](SUPPORT.md) — Port mappings, full command reference, and troubleshooting
+- Run `make help` to see all available commands
+- See [SUPPORT.md](SUPPORT.md) for port mappings, full command reference, and troubleshooting
+- Open an [issue](https://github.com/zwidekalanga/devstack/issues) for bugs or questions
+
+## License
+
+This project is proprietary and confidential.
