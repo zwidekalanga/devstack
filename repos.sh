@@ -32,9 +32,9 @@ DEFAULT_BRANCH="${CAPITEC_DEFAULT_BRANCH:-main}"
 
 # Repository definitions: <directory-name> <ssh-url> <https-url>
 REPOS=(
-    "core-banking git@github.com:capitec/core-banking.git https://github.com/capitec/core-banking.git"
-    "core-fraud-detection git@github.com:capitec/core-fraud-detection.git https://github.com/capitec/core-fraud-detection.git"
-    "fraud-ops-portal git@github.com:capitec/fraud-ops-portal.git https://github.com/capitec/fraud-ops-portal.git"
+    "core-banking git@github.com:zwidekalanga/core-banking.git https://github.com/zwidekalanga/core-banking.git"
+    "core-fraud-detection git@github.com:zwidekalanga/core-fraud-detection.git https://github.com/zwidekalanga/core-fraud-detection.git"
+    "fraud-ops-portal git@github.com:zwidekalanga/fraud-ops-portal.git https://github.com/zwidekalanga/fraud-ops-portal.git"
 )
 
 # ---------------------------------------------------------------------------
